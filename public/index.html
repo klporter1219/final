@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pokemon</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/9.6.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/9.6.1/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  </head>
+  <body>
+    <!-- home page -->
+    <div class="background">
+        <!-- nav bar -->
+        <nav>
+            <a href="index.html" class="nav-tab-chosen">Pokémon</a>
+            <input type="text" placeholder="search..." class="nav-search" id="search">
+            <a href="box-list.html" class="nav-tab">Box List</a>
+            <a href="#" class="nav-tab" id="logout">Logout</a>
+        </nav>
+
+        <div id="resultList"></div>
+    </div>
+
+    <script>
+      let _db, _user;
+
+      function addToBox(id) {
+        const doc = _db.collection('boxes').doc();
+
+        doc.set({
+          userId: _user.uid,
+          pokemonId: id
+        });
+
+        alert('Added successfully.');
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        try {
+          let pokemon;
+          let searchResults = [];
+
+          firebase
+          .auth()
+          .onAuthStateChanged(function(user) {
+              if (user && user.email) {
+                _db = firebase.firestore();
+                _user = user;
+              } else {
+                window.location = './login.html';
+                alert('Please login or create an account');
+              }
+            });
+
+          fetch(`https://pokeapi.co/api/v2/pokemon?limit=999999`)
+            .then(function (resp) {
+              return resp.json();
+            })
+            .then(function(data) {
+              pokemon = data.results;
+            });
+
+          let timeout;
+
+          $('#search').on('input', function(event) {
+            const search = event.target.value;
+
+            clearTimeout(timeout);
+
+            if (!search) {
+              $('#resultList').html('');
+
+              return;
+            }
+
+            timeout = setTimeout(function() {
+              $('#resultList').html('');
+
+              pokemon.filter(function (p) {
+                return p.name.toLowerCase().includes(search.toLowerCase());
+              }).map(function (p) {
+                fetch(p.url)
+                  .then(function(resp) {
+                    return resp.json();
+                  })
+                  .then(function (pokemon) {
+                    console.log(pokemon);
+
+                    const heightFt = Math.floor(pokemon.height / 12);
+                    const heightIn = pokemon.height % 12;
+                    const name = pokemon.name.split('-')
+                      .map(function (word) {
+                        return word[0].toUpperCase() + word.substr(1);
+                      }).join(' ');
+                    const types = pokemon.types.map((type) => {
+                      const typeName = type.type.name;
+
+                      return typeName[0].toUpperCase() + typeName.substr(1);
+                    }).join(', ');
+                    const abilities = pokemon.abilities.map((ability) => {
+                      return ability.ability.name.split('-').map((word) => {
+                        return word[0].toUpperCase() + word.substr(1);
+                      }).join(' ');
+                    }).join(', ');
+
+                    $('#resultList').append(`
+                      <div class="pokemon-list-item">
+                        <h4>${name} (#${pokemon.id})</h4>
+                        <div class="pokemon-list-image">
+                          <img src="${pokemon.sprites.front_default}" />
+                        </div>
+                        <p>Height: <b>${heightFt}' ${heightIn}"</b></p>
+                        <p>Weight: <b>${pokemon.weight} lbs</b></p>
+                        <p>Type: <b>${types}</b></p>
+                        <p>Abilities: <b>${abilities}</b></p>
+                        <button class="pokemon-list-button" onClick="addToBox(${pokemon.id})">
+                          ADD TO BOXES
+                        </button>
+                      </div>
+                    `);
+                  });
+              });
+            }, 1000);
+          });          
+        } catch (e) {
+          console.error(e);
+        }
+      });
+    </script>
+    <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"></script>
+  </body>
+</html>

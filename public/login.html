@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pokemon | Login / Signup</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/9.6.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/9.6.1/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/9.6.1/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+  </head>
+  <body>
+    <!-- box list page -->
+    <div class="background">
+        <!-- nav bar -->
+        <nav>
+            <a href="#" class="nav-tab">Pokémon</a>
+        </nav>
+
+        <div class="login-signup">
+        <!-- login -->
+            <form class="login" onSubmit="return login()">
+                <h1 class="login-title">Login</h1>
+                <h3 class="input-title">Email</h3>
+
+                <div class="input-div">
+                    <img src="images/person.png" alt="Person Logo" class="logo" />
+                    <input type="text" class="login-input input" id="email" placeholder="Type your email">
+                </div>
+                <div class="input-div">
+                    <h1 class="input-title-pass">Password</h1>
+                    <img src="images/lock.png" alt="Lock Logo" class="logo" />
+                    <input type="password" class="login-input input" id="password" placeholder="Type your password">
+                </div>
+
+                <button class="logsign-button" type="submit">LOGIN</button>
+            </form>
+
+        <!-- signup -->
+        <form id="signup" class="signup" onSubmit="return createAccount()">
+            <h1 class="login-title">Sign Up</h1>
+            <h3 class="input-title">Email</h3>
+
+            <div class="input-div">
+                <img src="images/person.png" alt="Person Logo" class="logo" />
+                <input type="text" class="signup-input input" placeholder="Type your email" id="email" />
+            </div>
+            <div class="input-div">
+                <h1 class="input-title-pass">Password</h1>
+                <img src="images/lock.png" alt="Lock Logo" class="logo" />
+                <input type="password" class="signup-input input" placeholder="Type your password" id="password" />
+            </div>
+            <div class="input-div">
+                <h1 class="input-title-pass">Confirm Password</h1>
+                <img src="images/lock.png" alt="Lock Logo" class="logo" />
+                <input type="password" class="signup-input input" placeholder="Re-type your password" id="confirmPassword" />
+            </div>
+
+            <button class="logsign-button" type="submit">SIGN UP</button>
+        </form>
+    </div>
+
+    <script>
+      function createAccount() {
+        const inputs = $('.signup-input');
+
+        const values = {};
+        inputs.each(function() {
+            values[this.id] = $(this).val();
+        });
+
+        if (!values.password || values.password !== values.confirmPassword) {
+            alert('Passwords do not match, please confirm your password');
+            return;
+        }
+
+        firebase
+        .auth()
+        .createUserWithEmailAndPassword(values.email, values.password)
+        .then((userCredential) => {
+            inputs.each(function() {
+                $(this).val('');
+            });
+
+            window.location = '/index.html'
+        })
+        .catch((error) => {
+            let errorCode = error.code;
+            let errorMessage = error.message;
+            alert(error.message);
+        });
+
+        return false;
+    }
+
+    function login() {
+        const inputs = $('.login-input');
+
+        const values = {};
+        inputs.each(function() {
+            values[this.id] = $(this).val();
+        });
+
+        firebase
+        .auth()
+        .signInWithEmailAndPassword(values.email, values.password)
+        .then((userCredential) => {
+            inputs.each(function() {
+                $(this).val('');
+            });
+
+            window.location = '/box-list.html';
+        })
+        .catch((error) => {
+            let errorCode = error.code;
+            let errorMessage = error.message;
+            alert(error.message);
+        });
+
+        return false;
+    }
+    </script>
+    <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"></script>
+  </body>
+</html>
